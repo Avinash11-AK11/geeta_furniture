@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1074553056734",
+    "project_id": "geeta-furniture",
+    "storage_bucket": "geeta-furniture.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1074553056734:android:a3388c7bfe8a08cfa0c14f",
+        "android_client_info": {
+          "package_name": "com.geeta.furniture"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBKXWdMedgnrk81QHjEB_aeDMg6OWDpdRM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
