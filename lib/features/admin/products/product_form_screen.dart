@@ -30,7 +30,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
   bool _saving = false;
 
   final List<File> _newImages = [];
-  final List<Map<String, String>> _existingImages = [];
+  final List<Map<String, dynamic>> _existingImages = [];
 
   @override
   void initState() {
@@ -45,7 +45,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
 
       if (widget.existingData!['images'] != null) {
         _existingImages.addAll(
-          List<Map<String, String>>.from(widget.existingData!['images']),
+          List<Map<String, dynamic>>.from(widget.existingData!['images']),
         );
       }
     }
@@ -60,7 +60,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     }
   }
 
-  Future<List<Map<String, String>>> _uploadImages() async {
+  Future<List<Map<String, dynamic>>> _uploadImages() async {
     final uploaded = <Map<String, String>>[];
 
     for (final file in _newImages) {
@@ -78,11 +78,17 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
       return;
     }
 
-    if (!_formKey.currentState!.validate()) return;
+    // ================= IMAGE VALIDATION =================
 
+    // ADD or EDIT → image is REQUIRED
     if (_existingImages.isEmpty && _newImages.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Add at least one product image')),
+      await _showImageRequiredDialog(
+        title: widget.productId == null
+            ? 'Add Product Image'
+            : 'Image Required',
+        message: widget.productId == null
+            ? 'Please add at least one image to publish the product.'
+            : 'A product must have at least one image. Please add an image before updating.',
       );
       return;
     }
@@ -115,6 +121,68 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     } finally {
       setState(() => _saving = false);
     }
+  }
+
+  Future<void> _showAddImageDialog() {
+    return showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: const Text('Add Product Image'),
+        content: const Text(
+          'Please add at least one image to publish the product.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF6F4E37),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+              _pickImages();
+            },
+            child: const Text('Add Image'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // dialog for image add or remove (add product screen & edit product screen)
+
+  Future<void> _showImageRequiredDialog({
+    required String title,
+    required String message,
+  }) async {
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+        content: Text(message, style: const TextStyle(height: 1.4)),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'OK',
+              style: TextStyle(
+                color: Color(0xFF6F4E37),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -152,31 +220,115 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
 
                 const SizedBox(height: 12),
 
+                // --- REPLACE ONLY THIS Wrap(...) SECTION --- //
                 Wrap(
                   spacing: 8,
                   children: [
-                    ..._existingImages.map(
-                      (img) => ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: Image.network(
-                          img['url']!,
-                          height: 70,
-                          width: 70,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                    ..._newImages.map(
-                      (img) => ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: Image.file(
-                          img,
-                          height: 70,
-                          width: 70,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
+                    // ===== EXISTING IMAGES =====
+                    ..._existingImages.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final img = entry.value;
+
+                      return Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: Image.network(
+                              img['url'],
+                              height: 70,
+                              width: 70,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+
+                          // ❌ REMOVE BUTTON
+                          Positioned(
+                            top: -6,
+                            right: -6,
+                            child: GestureDetector(
+                              onTap: () async {
+                                final removedImage = _existingImages[index];
+
+                                // 1️⃣ Remove from UI immediately
+                                setState(() {
+                                  _existingImages.removeAt(index);
+                                });
+
+                                // 2️⃣ Remove from Cloudinary (PERMANENT)
+                                try {
+                                  await CloudinaryService.deleteImage(
+                                    removedImage['publicId'],
+                                  );
+                                } catch (e) {
+                                  debugPrint('Cloudinary delete failed: $e');
+                                }
+                              },
+                              child: Container(
+                                height: 20,
+                                width: 20,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF6F4E37),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.close,
+                                  size: 14,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    }),
+
+                    // ===== NEW IMAGES =====
+                    ..._newImages.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final file = entry.value;
+
+                      return Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: Image.file(
+                              file,
+                              height: 70,
+                              width: 70,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+
+                          // ❌ REMOVE BUTTON
+                          Positioned(
+                            top: -6,
+                            right: -6,
+                            child: GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  _newImages.removeAt(index);
+                                });
+                              },
+                              child: Container(
+                                height: 20,
+                                width: 20,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF6F4E37),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.close,
+                                  size: 14,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    }),
                   ],
                 ),
 

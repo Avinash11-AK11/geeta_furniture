@@ -61,10 +61,10 @@ class _FurnitureDetailsScreenState extends State<FurnitureDetailsScreen> {
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
-          /* ================= HERO IMAGE ================= */
+          /* ================= IMAGE (ADMIN STYLE) ================= */
           SliverAppBar(
             backgroundColor: const Color(0xFFF8F3EE),
-            expandedHeight: 460,
+            expandedHeight: 360,
             pinned: true,
             elevation: 0,
             leading: IconButton(
@@ -87,63 +87,55 @@ class _FurnitureDetailsScreenState extends State<FurnitureDetailsScreen> {
               ),
             ],
             flexibleSpace: FlexibleSpaceBar(
-              background: Stack(
-                alignment: Alignment.bottomCenter,
+              background: Column(
                 children: [
-                  /// IMAGE
-                  PageView.builder(
-                    itemCount: _images.length,
-                    onPageChanged: (i) => setState(() => _currentImage = i),
-                    itemBuilder: (_, index) {
-                      return Container(
-                        color: const Color(0xFFF8F3EE),
-                        alignment: Alignment.center,
-                        child: Image.asset(
-                          _images[index],
-                          fit: BoxFit.contain,
-                          width: double.infinity,
-                        ),
-                      );
-                    },
-                  ),
-
-                  /// INDICATOR (POLISHED)
-                  Positioned(
-                    bottom: 20,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.92),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        children: List.generate(
-                          _images.length,
-                          (i) => AnimatedContainer(
-                            duration: const Duration(milliseconds: 250),
-                            margin: const EdgeInsets.symmetric(horizontal: 4),
-                            height: 6,
-                            width: _currentImage == i ? 22 : 6,
-                            decoration: BoxDecoration(
-                              color: _currentImage == i
-                                  ? AppColors.accentOrange
-                                  : Colors.black26,
-                              borderRadius: BorderRadius.circular(6),
+                  const SizedBox(height: 90),
+                  Expanded(
+                    child: PageView.builder(
+                      itemCount: _images.length,
+                      onPageChanged: (i) => setState(() => _currentImage = i),
+                      itemBuilder: (_, index) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(24),
+                            child: Image.asset(
+                              _images[index],
+                              fit: BoxFit.contain,
+                              width: double.infinity,
                             ),
                           ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(
+                      _images.length,
+                      (i) => AnimatedContainer(
+                        duration: const Duration(milliseconds: 250),
+                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                        height: 6,
+                        width: _currentImage == i ? 18 : 6,
+                        decoration: BoxDecoration(
+                          color: _currentImage == i
+                              ? AppColors.accentOrange
+                              : Colors.black26,
+                          borderRadius: BorderRadius.circular(6),
                         ),
                       ),
                     ),
                   ),
+                  const SizedBox(height: 16),
                 ],
               ),
             ),
           ),
 
-          /* ================= DETAILS CARD ================= */
+          /* ================= DETAILS (ADMIN STYLE) ================= */
           SliverToBoxAdapter(
             child: Container(
               padding: const EdgeInsets.fromLTRB(20, 24, 20, 150),
@@ -157,7 +149,7 @@ class _FurnitureDetailsScreenState extends State<FurnitureDetailsScreen> {
                   Text(
                     widget.item.name,
                     style: const TextStyle(
-                      fontSize: 24,
+                      fontSize: 22,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -167,29 +159,37 @@ class _FurnitureDetailsScreenState extends State<FurnitureDetailsScreen> {
                   Text(
                     widget.item.price,
                     style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
                       color: AppColors.accentOrange,
                     ),
                   ),
 
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 20),
 
-                  Row(
-                    children: const [
-                      Icon(Icons.check_circle, size: 16, color: Colors.green),
-                      SizedBox(width: 6),
-                      Text(
-                        'In Stock',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: Colors.green,
-                        ),
-                      ),
-                    ],
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8F3EE),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      children: [
+                        _infoRow('Category', widget.item.category),
+                        const SizedBox(height: 8),
+                        _infoRow('Material', 'Solid Wood'),
+                      ],
+                    ),
                   ),
 
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
+
+                  const Text(
+                    'Description',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
+
+                  const SizedBox(height: 6),
 
                   const Text(
                     'Premium quality furniture crafted with durable materials and elegant design. Ideal for modern homes and everyday use.',
@@ -199,25 +199,6 @@ class _FurnitureDetailsScreenState extends State<FurnitureDetailsScreen> {
                       color: AppColors.textSecondary,
                     ),
                   ),
-
-                  const SizedBox(height: 24),
-                  const Divider(),
-
-                  _InfoTile(
-                    icon: Icons.category,
-                    title: 'Category',
-                    value: widget.item.category,
-                  ),
-                  const _InfoTile(
-                    icon: Icons.layers,
-                    title: 'Material',
-                    value: 'Solid Wood',
-                  ),
-                  const _InfoTile(
-                    icon: Icons.store,
-                    title: 'Store',
-                    value: 'Geeta Ply & Furniture',
-                  ),
                 ],
               ),
             ),
@@ -225,7 +206,7 @@ class _FurnitureDetailsScreenState extends State<FurnitureDetailsScreen> {
         ],
       ),
 
-      /* ================= ACTION BAR ================= */
+      /* ================= ACTION BAR (UNCHANGED) ================= */
       bottomNavigationBar: SafeArea(
         child: Container(
           padding: const EdgeInsets.all(16),
@@ -309,39 +290,27 @@ class _FurnitureDetailsScreenState extends State<FurnitureDetailsScreen> {
       ),
     );
   }
-}
 
-/* ================= INFO TILE ================= */
-
-class _InfoTile extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String value;
-
-  const _InfoTile({
-    required this.icon,
-    required this.title,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: Colors.black54),
-          const SizedBox(width: 12),
-          Text('$title:', style: const TextStyle(color: Colors.black54)),
-          const SizedBox(width: 6),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(fontWeight: FontWeight.w600),
+  Widget _infoRow(String label, String value) {
+    return Row(
+      children: [
+        SizedBox(
+          width: 80,
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: Colors.black54,
+              fontWeight: FontWeight.w500,
             ),
           ),
-        ],
-      ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+        ),
+      ],
     );
   }
 }
