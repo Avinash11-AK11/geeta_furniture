@@ -19,24 +19,36 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Products'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ProductFormScreen()),
-              );
-            },
-          ),
-        ],
-      ),
-      body: Column(
+    return SafeArea(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ================= FILTERS (UNCHANGED) =================
+          // ================= HEADER (REPLACES APPBAR) =================
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Products',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.add),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const ProductFormScreen(),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+
+          // ================= CATEGORY FILTER =================
           SizedBox(
             height: 44,
             child: ListView.builder(
@@ -62,10 +74,10 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
                     child: Text(
                       category,
                       style: theme.textTheme.bodyMedium!.copyWith(
+                        fontWeight: FontWeight.w500,
                         color: isSelected
                             ? theme.colorScheme.onPrimary
                             : theme.colorScheme.onPrimaryContainer,
-                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),
@@ -95,30 +107,27 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
                 }).toList();
 
                 if (docs.isEmpty) {
-                  return const Center(
-                    child: Text(
-                      'No products found',
-                      style: TextStyle(fontSize: 15),
-                    ),
-                  );
+                  return const Center(child: Text('No products found'));
                 }
 
                 return GridView.builder(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: docs.length,
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
                     mainAxisSpacing: 16,
                     crossAxisSpacing: 16,
                     childAspectRatio: 0.70,
                   ),
-                  itemCount: docs.length,
                   itemBuilder: (_, index) {
                     final doc = docs[index];
                     final data = doc.data() as Map<String, dynamic>;
+
                     final images =
                         (data['images'] is List && data['images'].isNotEmpty)
                         ? data['images']
                         : null;
+
                     final imageUrl = images != null
                         ? images.first['url']
                         : null;
@@ -135,7 +144,7 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
                           ),
                         );
                       },
-                      child: adminProductCard(
+                      child: _adminProductCard(
                         context: context,
                         name: data['name'] ?? '',
                         price: data['price'] ?? 0,
@@ -152,8 +161,8 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
     );
   }
 
-  // ================= PRODUCT CARD (FINAL, FIXED) =================
-  Widget adminProductCard({
+  // ================= PRODUCT CARD (UNCHANGED VISUALS) =================
+  Widget _adminProductCard({
     required BuildContext context,
     required String name,
     required num price,
@@ -163,50 +172,21 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        // ✅ CARD BACKGROUND (slightly lighter than screen bg)
         color: const Color(0xFFFBF7F2),
-
         borderRadius: BorderRadius.circular(20),
-
-        // ✅ SOFT BORDER (separates card from background)
-        border: Border.all(
-          color: const Color(0xFFE6DED4), // warm subtle border
-          width: 1,
-        ),
-
-        // ✅ ELEVATION SHADOW (very soft, premium)
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 20,
-            offset: const Offset(0, 12),
-          ),
-        ],
+        border: Border.all(color: const Color(0xFFE6DED4)),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // ===== IMAGE SECTION =====
           ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
             child: AspectRatio(
-              aspectRatio: 1, // perfect square image
+              aspectRatio: 1.05,
               child: Container(
-                color: const Color(0xFFF3EEE8), // image placeholder bg
+                color: const Color(0xFFF3EEE8),
                 child: imageUrl != null
-                    ? Image.network(
-                        imageUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) {
-                          return const Center(
-                            child: Icon(
-                              Icons.chair_alt_outlined,
-                              size: 42,
-                              color: Color(0xFF6F4E37),
-                            ),
-                          );
-                        },
-                      )
+                    ? Image.network(imageUrl, fit: BoxFit.cover)
                     : const Center(
                         child: Icon(
                           Icons.chair_alt_outlined,
@@ -217,10 +197,8 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
               ),
             ),
           ),
-
-          // ===== TEXT SECTION =====
           Padding(
-            padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 14),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -230,16 +208,16 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodyMedium!.copyWith(
                     fontWeight: FontWeight.w600,
-                    fontSize: 14.5,
+                    fontSize: 15,
                     color: const Color(0xFF2E1F14),
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 4),
                 Text(
                   '₹${price.toStringAsFixed(0)}',
                   style: theme.textTheme.bodyMedium!.copyWith(
                     fontWeight: FontWeight.w700,
-                    fontSize: 14,
+                    fontSize: 14.5,
                     color: const Color(0xFF6F4E37),
                   ),
                 ),

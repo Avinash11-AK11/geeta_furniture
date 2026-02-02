@@ -78,7 +78,7 @@ class WishlistScreen extends StatelessWidget {
                   crossAxisCount: 2,
                   mainAxisSpacing: 16,
                   crossAxisSpacing: 16,
-                  childAspectRatio: 0.72,
+                  childAspectRatio: 0.68, // 🔥 FINAL FIX
                 ),
                 itemBuilder: (context, index) {
                   final item = items[index];

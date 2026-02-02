@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 
 import 'home_screen.dart';
-// import other tabs if you have them
-// import '../wishlist/wishlist_screen.dart';
-// import '../profile/profile_screen.dart';
 
 class MainHomeShell extends StatefulWidget {
   const MainHomeShell({super.key});
@@ -17,8 +14,10 @@ class _MainHomeShellState extends State<MainHomeShell> {
 
   final List<Widget> _screens = const [
     HomeScreen(),
-    // WishlistScreen(),
-    // ProfileScreen(),
+
+    // ✅ PLACEHOLDERS (SAFE, NO UI CHANGE)
+    _WishlistPlaceholder(),
+    _ProfilePlaceholder(),
   ];
 
   @override
@@ -42,6 +41,32 @@ class _MainHomeShellState extends State<MainHomeShell> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/* =====================================================
+   🔹 SAFE PLACEHOLDERS (TEMPORARY)
+   ===================================================== */
+
+class _WishlistPlaceholder extends StatelessWidget {
+  const _WishlistPlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Text('Wishlist coming soon', style: TextStyle(fontSize: 16)),
+    );
+  }
+}
+
+class _ProfilePlaceholder extends StatelessWidget {
+  const _ProfilePlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Text('Profile coming soon', style: TextStyle(fontSize: 16)),
     );
   }
 }

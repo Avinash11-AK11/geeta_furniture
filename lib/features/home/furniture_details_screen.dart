@@ -53,157 +53,152 @@ class _FurnitureDetailsScreenState extends State<FurnitureDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final bool isLiked = wishlist.isWishlisted(widget.item);
+    final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F3EE),
+      backgroundColor: const Color(0xFFF6F2EB),
 
-      body: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          /* ================= IMAGE (ADMIN STYLE) ================= */
-          SliverAppBar(
-            backgroundColor: const Color(0xFFF8F3EE),
-            expandedHeight: 360,
-            pinned: true,
-            elevation: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.black),
-              onPressed: () => Navigator.pop(context),
-            ),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.share, color: Colors.black),
-                onPressed: _shareProduct,
+      body: Container(
+        color: const Color(0xFFF6F2EB),
+        child: CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            /* ================= IMAGE ================= */
+            SliverAppBar(
+              backgroundColor: const Color(0xFFF6F2EB),
+              expandedHeight: 360,
+              pinned: true,
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.black),
+                onPressed: () => Navigator.pop(context),
               ),
-              IconButton(
-                icon: Icon(
-                  isLiked ? Icons.favorite : Icons.favorite_border,
-                  color: isLiked ? Colors.red : Colors.black,
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.share, color: Colors.black),
+                  onPressed: _shareProduct,
                 ),
-                onPressed: () {
-                  setState(() => wishlist.toggle(widget.item));
-                },
-              ),
-            ],
-            flexibleSpace: FlexibleSpaceBar(
-              background: Column(
-                children: [
-                  const SizedBox(height: 90),
-                  Expanded(
-                    child: PageView.builder(
-                      itemCount: _images.length,
-                      onPageChanged: (i) => setState(() => _currentImage = i),
-                      itemBuilder: (_, index) {
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(24),
-                            child: Image.asset(
-                              _images[index],
-                              fit: BoxFit.contain,
-                              width: double.infinity,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 10),
 
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(
-                      _images.length,
-                      (i) => AnimatedContainer(
-                        duration: const Duration(milliseconds: 250),
-                        margin: const EdgeInsets.symmetric(horizontal: 4),
-                        height: 6,
-                        width: _currentImage == i ? 18 : 6,
-                        decoration: BoxDecoration(
-                          color: _currentImage == i
-                              ? AppColors.accentOrange
-                              : Colors.black26,
-                          borderRadius: BorderRadius.circular(6),
+                /// ✅ FIXED WISHLIST ICON
+                AnimatedBuilder(
+                  animation: wishlist,
+                  builder: (context, _) {
+                    final isLiked = wishlist.isWishlisted(widget.item);
+
+                    return IconButton(
+                      icon: Icon(
+                        isLiked ? Icons.favorite : Icons.favorite_border,
+                        color: isLiked ? Colors.red : Colors.black,
+                      ),
+                      onPressed: () {
+                        wishlist.toggle(widget.item);
+                      },
+                    );
+                  },
+                ),
+              ],
+              flexibleSpace: FlexibleSpaceBar(
+                background: Column(
+                  children: [
+                    const SizedBox(height: 90),
+                    Expanded(
+                      child: PageView.builder(
+                        itemCount: _images.length,
+                        onPageChanged: (i) => setState(() => _currentImage = i),
+                        itemBuilder: (_, index) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(22),
+                              child: Image.network(
+                                _images[index],
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(
+                        _images.length,
+                        (i) => AnimatedContainer(
+                          duration: const Duration(milliseconds: 250),
+                          margin: const EdgeInsets.symmetric(horizontal: 4),
+                          height: 6,
+                          width: _currentImage == i ? 18 : 6,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
+                    const SizedBox(height: 16),
+                  ],
+                ),
               ),
             ),
-          ),
 
-          /* ================= DETAILS (ADMIN STYLE) ================= */
-          SliverToBoxAdapter(
-            child: Container(
-              padding: const EdgeInsets.fromLTRB(20, 24, 20, 150),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.item.name,
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
+            /* ================= DETAILS ================= */
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 150),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.item.name,
+                      style: theme.textTheme.titleLarge!.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF2E1F14),
+                      ),
                     ),
-                  ),
-
-                  const SizedBox(height: 6),
-
-                  Text(
-                    widget.item.price,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.accentOrange,
+                    const SizedBox(height: 8),
+                    Text(
+                      widget.item.price,
+                      style: theme.textTheme.titleMedium!.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF6F4E37),
+                      ),
                     ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF8F3EE),
-                      borderRadius: BorderRadius.circular(16),
+                    const SizedBox(height: 20),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFFE6DED6)),
+                      ),
+                      child: Column(
+                        children: [
+                          _infoRow('Category', widget.item.category),
+                          const SizedBox(height: 10),
+                          _infoRow('Material', 'Solid Wood'),
+                        ],
+                      ),
                     ),
-                    child: Column(
-                      children: [
-                        _infoRow('Category', widget.item.category),
-                        const SizedBox(height: 8),
-                        _infoRow('Material', 'Solid Wood'),
-                      ],
+                    const SizedBox(height: 24),
+                    Text(
+                      'Description',
+                      style: theme.textTheme.titleMedium!.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  const Text(
-                    'Description',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                  ),
-
-                  const SizedBox(height: 6),
-
-                  const Text(
-                    'Premium quality furniture crafted with durable materials and elegant design. Ideal for modern homes and everyday use.',
-                    style: TextStyle(
-                      fontSize: 14,
-                      height: 1.6,
-                      color: AppColors.textSecondary,
+                    const SizedBox(height: 8),
+                    Text(
+                      widget.item.description ?? '',
+                      style: theme.textTheme.bodyMedium!.copyWith(height: 1.5),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
 
       /* ================= ACTION BAR (UNCHANGED) ================= */
@@ -295,19 +290,22 @@ class _FurnitureDetailsScreenState extends State<FurnitureDetailsScreen> {
     return Row(
       children: [
         SizedBox(
-          width: 80,
+          width: 90,
           child: Text(
             label,
             style: const TextStyle(
-              color: Colors.black54,
               fontWeight: FontWeight.w500,
+              color: Color(0xFF6F4E37),
             ),
           ),
         ),
         Expanded(
           child: Text(
             value,
-            style: const TextStyle(fontWeight: FontWeight.w600),
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF2E1F14),
+            ),
           ),
         ),
       ],

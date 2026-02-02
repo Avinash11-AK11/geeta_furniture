@@ -113,40 +113,31 @@ class _MyAppState extends State<MyApp> {
       debugShowCheckedModeBanner: false,
 
       /* ============================================================
-         🎨 GEETA PLY & FURNITURE THEME (IMPORTANT)
+         🎨 GEETA PLY & FURNITURE THEME (STABLE ON REAL DEVICES)
          ============================================================ */
       theme: ThemeData(
         useMaterial3: true,
 
+        // 🔒 KEEP YOUR COLOR (DO NOT CHANGE)
         scaffoldBackgroundColor: const Color(0xFFFDF8F4),
 
+        // 🔑 THIS IS THE REAL FIX FOR REAL DEVICES
         colorScheme: const ColorScheme.light(
-          primary: Color(0xFF6B4E3D), // 🟤 Brand brown
+          primary: Color(0xFF6B4E3D),
           onPrimary: Colors.white,
 
-          primaryContainer: Color(0xFFF1E8DE), // 🟤 Light beige
+          primaryContainer: Color(0xFFF1E8DE),
           onPrimaryContainer: Color(0xFF3E2C23),
 
-          surface: Color(0xFFFFFFFF),
+          surface: Color(0xFFFDF8F4), // ⬅ forces non-white surfaces
+          background: Color(0xFFFDF8F4), // ⬅ forces non-white screens
           onSurface: Color(0xFF2E2E2E),
-
-          background: Color(0xFFFDF8F4),
           onBackground: Color(0xFF2E2E2E),
         ),
 
         appBarTheme: const AppBarTheme(
           backgroundColor: Color(0xFFFDF8F4),
-          foregroundColor: Color(0xFF2E2E2E),
           elevation: 0,
-          centerTitle: false,
-        ),
-
-        textTheme: const TextTheme(
-          headlineSmall: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF2E2E2E),
-          ),
-          bodyMedium: TextStyle(color: Color(0xFF2E2E2E)),
         ),
       ),
 

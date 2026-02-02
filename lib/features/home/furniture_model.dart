@@ -1,10 +1,15 @@
 class FurnitureModel {
-  final String id; // ✅ REQUIRED (used for deep links & sharing)
+  final String id; // 🔑 Firestore document ID
   final String name;
-  final String image;
-  final String price;
-  final int priceValue;
+  final String image; // 🔹 Primary image (used in cards)
+  final String price; // 🔹 Formatted price (₹xxxx)
+  final int priceValue; // 🔹 Numeric price (sorting/search)
   final String category;
+
+  // 🔹 From Admin Panel (Firestore)
+  final String? description;
+
+  // 🔹 Image gallery (Cloudinary URLs)
   final List<String> gallery;
 
   const FurnitureModel({
@@ -14,10 +19,11 @@ class FurnitureModel {
     required this.price,
     required this.priceValue,
     required this.category,
+    this.description,
     this.gallery = const [],
   });
 
-  /// 🔄 Convert object → JSON (storage / share)
+  /// 🔄 Convert object → JSON (for local storage / sharing if needed)
   Map<String, dynamic> toJson() => {
     'id': id,
     'name': name,
@@ -25,6 +31,7 @@ class FurnitureModel {
     'price': price,
     'priceValue': priceValue,
     'category': category,
+    'description': description,
     'gallery': gallery,
   };
 
@@ -37,13 +44,14 @@ class FurnitureModel {
       price: json['price'] as String,
       priceValue: json['priceValue'] as int,
       category: json['category'] as String,
+      description: json['description'],
       gallery: json['gallery'] != null
           ? List<String>.from(json['gallery'])
           : const [],
     );
   }
 
-  /// 🆔 Equality based on ID (VERY IMPORTANT for wishlist)
+  /// 🆔 Equality based on ID (wishlist & comparisons)
   @override
   bool operator ==(Object other) =>
       identical(this, other) || other is FurnitureModel && other.id == id;

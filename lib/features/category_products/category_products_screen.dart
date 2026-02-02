@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../home/furniture_model.dart';
 import '../home/widgets/furniture_card.dart';
 import '../home/furniture_details_screen.dart';
@@ -7,6 +8,8 @@ enum SortType { none, priceLowHigh, priceHighLow }
 
 class CategoryProductsScreen extends StatefulWidget {
   final String category;
+
+  // 🔑 Products already filtered from Firestore (Admin panel)
   final List<FurnitureModel> products;
 
   const CategoryProductsScreen({
@@ -24,7 +27,7 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
   String _searchQuery = '';
   SortType _sortType = SortType.none;
 
-  /// 🔹 SORTED PRODUCTS
+  /// 🔹 SORTED PRODUCTS (PRICE)
   List<FurnitureModel> get _sortedProducts {
     final list = [...widget.products];
     switch (_sortType) {
@@ -40,7 +43,7 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
     return list;
   }
 
-  /// 🔹 FINAL FILTERED PRODUCTS
+  /// 🔹 FINAL FILTERED PRODUCTS (SEARCH)
   List<FurnitureModel> get _visibleProducts {
     final query = _searchQuery.trim().toLowerCase();
     if (query.isEmpty) return _sortedProducts;
@@ -51,7 +54,7 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
     }).toList();
   }
 
-  /// 🔹 SORT SHEET
+  /// 🔹 SORT BOTTOM SHEET
   void _openSortSheet() {
     showModalBottomSheet(
       context: context,
@@ -71,7 +74,7 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
               ),
               const SizedBox(height: 12),
 
-              RadioListTile(
+              RadioListTile<SortType>(
                 title: const Text('Price: Low to High'),
                 value: SortType.priceLowHigh,
                 groupValue: _sortType,
@@ -81,7 +84,7 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                 },
               ),
 
-              RadioListTile(
+              RadioListTile<SortType>(
                 title: const Text('Price: High to Low'),
                 value: SortType.priceHighLow,
                 groupValue: _sortType,
@@ -139,7 +142,7 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            /// 🔍 SEARCH BAR WITH CLEAR ICON
+            /// 🔍 SEARCH BAR
             TextField(
               controller: _searchController,
               onChanged: (value) {
@@ -170,7 +173,7 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
 
             const SizedBox(height: 20),
 
-            /// 🪑 PRODUCTS / EMPTY STATE
+            /// 🪑 PRODUCT GRID / EMPTY STATE
             Expanded(
               child: _visibleProducts.isEmpty
                   ? Column(
@@ -199,7 +202,7 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                             crossAxisCount: 2,
                             mainAxisSpacing: 16,
                             crossAxisSpacing: 16,
-                            childAspectRatio: 0.72,
+                            childAspectRatio: 0.68,
                           ),
                       itemBuilder: (_, index) {
                         final item = _visibleProducts[index];

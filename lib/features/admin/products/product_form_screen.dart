@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../../core/storage/cloudinary_service.dart';
 import 'product_categories.dart';
@@ -78,6 +79,14 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
       return;
     }
 
+    // 2️⃣ CATEGORY VALIDATION (ADD THIS ⬇️⬇️⬇️)
+    if (_category == null || _category!.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please select a category')));
+      return;
+    }
+
     // ================= IMAGE VALIDATION =================
 
     // ADD or EDIT → image is REQUIRED
@@ -97,6 +106,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
 
     try {
       final images = await _uploadImages();
+      final bool isEdit = widget.productId != null;
 
       final data = {
         'name': _nameCtrl.text.trim(),
@@ -105,6 +115,14 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
         'category': _category,
         'material': _material,
         'images': images,
+
+        // 🔑 USER PANEL VISIBILITY
+        // 'isActive': true,
+        'isActive': isEdit ? (widget.existingData?['isActive'] ?? true) : true,
+
+        // 🔐 ADMIN TRACE
+        'createdBy': FirebaseAuth.instance.currentUser?.uid,
+
         'updatedAt': FieldValue.serverTimestamp(),
         if (widget.productId == null) 'createdAt': FieldValue.serverTimestamp(),
       };
@@ -191,6 +209,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFFDF8F3),
+      // backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: const Color(0xFFFDF8F3),
         elevation: 0,

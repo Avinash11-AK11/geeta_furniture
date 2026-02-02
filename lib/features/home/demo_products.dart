@@ -8,5 +8,11 @@ final List<FurnitureModel> demoProducts = [
     price: '₹3,499',
     priceValue: 3499,
     category: 'Chairs',
+
+    // 🔹 Optional fields (new model compatible)
+    description:
+        'Classic wooden chair made from high-quality solid wood, '
+        'designed for comfort and durability.',
+    gallery: ['assets/images/chair.jpg'],
   ),
 ];

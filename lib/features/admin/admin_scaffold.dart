@@ -11,7 +11,6 @@ import 'profile/admin_profile_screen.dart';
 class AdminScaffold extends StatefulWidget {
   const AdminScaffold({super.key});
 
-  /// Allows child screens (Dashboard) to control bottom tabs
   static _AdminScaffoldState? of(BuildContext context) {
     return context.findAncestorStateOfType<_AdminScaffoldState>();
   }
@@ -38,13 +37,18 @@ class _AdminScaffoldState extends State<AdminScaffold> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(index: _currentIndex, children: _screens),
+      // ✅ SINGLE SOURCE OF BACKGROUND (CRITICAL)
+      backgroundColor: const Color(0xFFF6F2EB),
+
+      body: SafeArea(
+        child: IndexedStack(index: _currentIndex, children: _screens),
+      ),
 
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: changeTab,
-
         type: BottomNavigationBarType.fixed,
+
         backgroundColor: Colors.white,
         elevation: 12,
 
