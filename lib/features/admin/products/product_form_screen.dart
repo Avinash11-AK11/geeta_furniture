@@ -19,6 +19,43 @@ class ProductFormScreen extends StatefulWidget {
 }
 
 class _ProductFormScreenState extends State<ProductFormScreen> {
+  InputDecoration _inputDecoration(String label) {
+    return InputDecoration(
+      labelText: label,
+
+      // ✅ KEEP underline, but control colors
+      enabledBorder: const UnderlineInputBorder(
+        borderSide: BorderSide(color: Color(0xFFE6DED6)),
+      ),
+      focusedBorder: const UnderlineInputBorder(
+        borderSide: BorderSide(color: Color(0xFF6F4E37), width: 1.4),
+      ),
+
+      // 🔥 ERROR STATE — NO RED UNDERLINE
+      errorBorder: const UnderlineInputBorder(
+        borderSide: BorderSide(color: Color(0xFFE6DED6)),
+      ),
+      focusedErrorBorder: const UnderlineInputBorder(
+        borderSide: BorderSide(color: Color(0xFF6F4E37), width: 1.4),
+      ),
+
+      // 🔥 LABEL NEVER TURNS RED
+      floatingLabelStyle: const TextStyle(
+        color: Color(0xFF3A2A1E),
+        fontWeight: FontWeight.w500,
+      ),
+
+      // 🔥 ERROR TEXT ONLY
+      errorStyle: const TextStyle(
+        color: Colors.redAccent,
+        fontSize: 12,
+        height: 1.2,
+      ),
+
+      isDense: true,
+    );
+  }
+
   final _formKey = GlobalKey<FormState>();
 
   final _nameCtrl = TextEditingController();
@@ -219,6 +256,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
         children: [
           Form(
             key: _formKey,
+            autovalidateMode: AutovalidateMode.onUserInteraction,
             child: ListView(
               padding: const EdgeInsets.all(16),
               children: [
@@ -361,15 +399,19 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                         .where((c) => c != 'All')
                         .map((c) => DropdownMenuItem(value: c, child: Text(c)))
                         .toList(),
-                    onChanged: (v) => setState(() => _category = v),
+                    onChanged: (v) {
+                      setState(() => _category = v);
+                      _formKey.currentState?.validate();
+                    },
                     validator: (v) => v == null ? 'Select category' : null,
-                    decoration: const InputDecoration(
-                      labelText: 'Category',
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 0,
-                        vertical: 12,
-                      ),
-                    ),
+                    // decoration: const InputDecoration(
+                    //   labelText: 'Category',
+                    //   contentPadding: EdgeInsets.symmetric(
+                    //     horizontal: 0,
+                    //     vertical: 12,
+                    //   ),
+                    // ),
+                    decoration: _inputDecoration('Category'),
                   ),
                 ),
 
@@ -382,14 +424,20 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                     items: const ['Ply', 'Block', 'Solid Wood']
                         .map((m) => DropdownMenuItem(value: m, child: Text(m)))
                         .toList(),
-                    onChanged: (v) => setState(() => _material = v!),
-                    decoration: const InputDecoration(
-                      labelText: 'Material',
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 0,
-                        vertical: 12,
-                      ),
-                    ),
+                    onChanged: (v) {
+                      setState(() => _material = v);
+                      _formKey.currentState?.validate();
+                    },
+                    validator: (v) => v == null ? 'Select material' : null,
+
+                    // decoration: const InputDecoration(
+                    //   labelText: 'Material',
+                    //   contentPadding: EdgeInsets.symmetric(
+                    //     horizontal: 0,
+                    //     vertical: 12,
+                    //   ),
+                    // ),
+                    decoration: _inputDecoration('Material'),
                   ),
                 ),
 
@@ -398,9 +446,11 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                 _fieldCard(
                   TextFormField(
                     controller: _nameCtrl,
-                    decoration: const InputDecoration(
-                      labelText: 'Product Name',
-                    ),
+                    // decoration: const InputDecoration(
+                    //   labelText: 'Product Name',
+                    // ),
+                    decoration: _inputDecoration('Product Name'),
+
                     validator: (v) =>
                         v == null || v.isEmpty ? 'Required' : null,
                   ),
@@ -412,7 +462,9 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                   TextFormField(
                     controller: _priceCtrl,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: 'Price'),
+                    // decoration: const InputDecoration(labelText: 'Price'),
+                    decoration: _inputDecoration('Price'),
+
                     validator: (v) =>
                         v == null || v.isEmpty ? 'Required' : null,
                   ),
@@ -424,7 +476,9 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                   TextFormField(
                     controller: _descCtrl,
                     maxLines: 4,
-                    decoration: const InputDecoration(labelText: 'Description'),
+                    // decoration: const InputDecoration(labelText: 'Description'),
+                    decoration: _inputDecoration('Description'),
+
                     validator: (v) =>
                         v == null || v.isEmpty ? 'Required' : null,
                   ),
@@ -494,10 +548,14 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
 
   Widget _fieldCard(Widget child) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: const Color(0xFFE6DED6), // 🔥 soft border
+          width: 1,
+        ),
       ),
       child: child,
     );
