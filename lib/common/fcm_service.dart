@@ -20,7 +20,6 @@ class FCMService {
 
   Future<void> init() async {
     if (_tokenListenerAttached) return;
-
     _tokenListenerAttached = true;
 
     // iOS foreground notification presentation
@@ -30,13 +29,15 @@ class FCMService {
       sound: true,
     );
 
-    // Token refresh listener
+    // Listen for token refresh
     FirebaseMessaging.instance.onTokenRefresh.listen((newToken) async {
       final user = _auth.currentUser;
       if (user == null) return;
 
-      debugPrint('🔄 FCM TOKEN REFRESHED');
-      debugPrint(newToken);
+      if (kDebugMode) {
+        debugPrint('🔄 FCM TOKEN REFRESHED');
+        debugPrint(newToken);
+      }
 
       try {
         await _firestore.collection('users').doc(user.uid).set({
@@ -44,7 +45,7 @@ class FCMService {
           'updatedAt': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
       } catch (e) {
-        debugPrint('❌ Failed to update refreshed token: $e');
+        debugPrint('❌ Failed to save refreshed token: $e');
       }
     });
   }
@@ -59,10 +60,10 @@ class FCMService {
     final user = _auth.currentUser;
     if (user == null) return;
 
-    _enabled = true;
-
     try {
-      // Web does not support permissions this way
+      _enabled = true;
+
+      // Request permission (non-web)
       if (!kIsWeb) {
         final settings = await _messaging.requestPermission(
           alert: true,
@@ -86,22 +87,21 @@ class FCMService {
       }
 
       if (kDebugMode) {
-        debugPrint('🔥🔥🔥 FCM TOKEN START 🔥🔥🔥');
+        debugPrint('🔥 FCM TOKEN 🔥');
         debugPrint(token);
-        debugPrint('🔥🔥🔥 FCM TOKEN END 🔥🔥🔥');
       }
 
-      // Save to Firestore
+      // Save token to Firestore
       await _firestore.collection('users').doc(user.uid).set({
         'fcmToken': token,
         'notificationsEnabled': true,
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
 
-      // Subscribe to global topic
+      // Optional topic (safe to keep)
       await _messaging.subscribeToTopic('all_users');
 
-      // Attach refresh listener
+      // Init refresh listener
       await init();
     } catch (e) {
       _enabled = false;
@@ -120,13 +120,9 @@ class FCMService {
     _enabled = false;
 
     try {
-      // Unsubscribe from topics
       await _messaging.unsubscribeFromTopic('all_users');
-
-      // Delete token locally
       await _messaging.deleteToken();
 
-      // Update Firestore
       await _firestore.collection('users').doc(user.uid).set({
         'fcmToken': FieldValue.delete(),
         'notificationsEnabled': false,
@@ -145,11 +141,11 @@ class FCMService {
      DEBUG ONLY
      ============================================================ */
 
-  /// Use only for Firebase Console testing
+  /// Use for Firebase Console test messages
   Future<void> printTokenForDebug() async {
     final token = await _messaging.getToken();
-    debugPrint('================ FCM TOKEN ================');
+    debugPrint('=========== FCM TOKEN ===========');
     debugPrint(token);
-    debugPrint('===========================================');
+    debugPrint('================================');
   }
 }

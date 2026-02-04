@@ -12,6 +12,7 @@ class MainHomeShell extends StatefulWidget {
 class _MainHomeShellState extends State<MainHomeShell> {
   int _index = 0;
 
+  /// Screens controlled by BottomNavigationBar
   final List<Widget> _screens = const [
     HomeScreen(),
 
@@ -23,12 +24,14 @@ class _MainHomeShellState extends State<MainHomeShell> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _screens[_index],
+      // ✅ Prevents status bar / notch issues
+      body: SafeArea(child: _screens[_index]),
 
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _index,
         onTap: (i) => setState(() => _index = i),
         selectedItemColor: const Color(0xFF6B3F2E),
+        type: BottomNavigationBarType.fixed,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(

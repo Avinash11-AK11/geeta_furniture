@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'admin_order_detail_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-import '../../../core/theme/app_colors.dart';
+import '../../core/theme/app_colors.dart';
+import 'user_order_detail_screen.dart';
 
-class AdminOrdersScreen extends StatelessWidget {
-  const AdminOrdersScreen({super.key});
+class UserOrdersScreen extends StatelessWidget {
+  const UserOrdersScreen({super.key});
 
-  Stream<QuerySnapshot> _ordersStream() {
-    return FirebaseFirestore.instance.collection('orders').snapshots();
+  Stream<QuerySnapshot> _userOrdersStream(String uid) {
+    return FirebaseFirestore.instance
+        .collection('orders')
+        .where('user.userId', isEqualTo: uid)
+        .snapshots();
   }
 
   String _displayStatus(String raw) {
@@ -51,13 +55,21 @@ class AdminOrdersScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      return const Scaffold(
+        body: Center(child: Text('Please login to view orders')),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         elevation: 0,
         backgroundColor: AppColors.background,
         title: const Text(
-          'Orders',
+          'My Orders',
           style: TextStyle(
             color: AppColors.textPrimary,
             fontWeight: FontWeight.w700,
@@ -65,7 +77,7 @@ class AdminOrdersScreen extends StatelessWidget {
         ),
       ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: _ordersStream(),
+        stream: _userOrdersStream(user.uid),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -96,8 +108,8 @@ class AdminOrdersScreen extends StatelessWidget {
             itemBuilder: (context, index) {
               final doc = docs[index];
               final data = doc.data() as Map<String, dynamic>;
-              final user = data['user'] as Map<String, dynamic>?;
 
+              final product = data['product'] ?? {};
               final statusLabel = _displayStatus(data['status'] ?? 'New');
 
               return InkWell(
@@ -106,12 +118,12 @@ class AdminOrdersScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => AdminOrderDetailScreen(orderId: doc.id),
+                      builder: (_) => UserOrderDetailScreen(orderId: doc.id),
                     ),
                   );
                 },
                 child: Container(
-                  margin: const EdgeInsets.only(bottom: 16),
+                  margin: const EdgeInsets.only(bottom: 14),
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -127,22 +139,34 @@ class AdminOrdersScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // NAME + STATUS
+                      // ORDER NUMBER
+                      Text(
+                        data['orderNumber'] ?? 'Order',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+
+                      const SizedBox(height: 6),
+
+                      // PRODUCT
+                      Text(
+                        product['name'] ?? 'Product',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      // STATUS + DATE
                       Row(
                         children: [
-                          Expanded(
-                            child: Text(
-                              user?['name'] ?? 'Customer',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textPrimary,
-                              ),
-                            ),
-                          ),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
+                              horizontal: 10,
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
@@ -160,35 +184,20 @@ class AdminOrdersScreen extends StatelessWidget {
                               ),
                             ),
                           ),
+                          const Spacer(),
+                          if (data['createdAt'] != null)
+                            Text(
+                              (data['createdAt'] as Timestamp)
+                                  .toDate()
+                                  .toString()
+                                  .substring(0, 16),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
                         ],
                       ),
-
-                      const SizedBox(height: 8),
-
-                      // PHONE
-                      if ((user?['phone'] ?? '').isNotEmpty)
-                        Text(
-                          user!['phone'],
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 13,
-                          ),
-                        ),
-
-                      const SizedBox(height: 12),
-
-                      // CREATED DATE
-                      if (data['createdAt'] != null)
-                        Text(
-                          (data['createdAt'] as Timestamp)
-                              .toDate()
-                              .toString()
-                              .substring(0, 16),
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
                     ],
                   ),
                 ),

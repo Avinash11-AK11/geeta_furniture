@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../core/theme/app_colors.dart';
 
 class OrderInquiryScreen extends StatefulWidget {
+  final String? productId;
   final String? productName;
 
-  const OrderInquiryScreen({super.key, this.productName});
+  const OrderInquiryScreen({super.key, this.productId, this.productName});
 
   @override
   State<OrderInquiryScreen> createState() => _OrderInquiryScreenState();
@@ -20,7 +22,7 @@ class _OrderInquiryScreenState extends State<OrderInquiryScreen> {
   final _productController = TextEditingController();
   final _messageController = TextEditingController();
 
-  static const String _whatsappNumber = '919313720047';
+  bool _loading = false;
 
   @override
   void initState() {
@@ -37,47 +39,80 @@ class _OrderInquiryScreenState extends State<OrderInquiryScreen> {
     super.dispose();
   }
 
-  /* ================= SEND TO WHATSAPP ================= */
+  /* ================= SUBMIT INQUIRY ================= */
 
-  Future<void> _sendWhatsApp() async {
+  Future<void> _submitInquiry() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final message =
-        '''
-Hello Geeta Ply & Furniture,
+    final user = FirebaseAuth.instance.currentUser;
 
-Customer Inquiry:
-
-Name: ${_nameController.text.trim()}
-Phone: ${_phoneController.text.trim()}
-Product: ${_productController.text.trim().isEmpty ? 'Not specified' : _productController.text.trim()}
-
-Message:
-${_messageController.text.trim()}
-''';
-
-    final uri = Uri.parse(
-      'whatsapp://send?phone=$_whatsappNumber&text=${Uri.encodeComponent(message)}',
-    );
-
-    final fallback = Uri.parse(
-      'https://wa.me/$_whatsappNumber?text=${Uri.encodeComponent(message)}',
-    );
-
-    try {
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        await launchUrl(fallback, mode: LaunchMode.externalApplication);
-      }
-    } catch (_) {
-      if (!mounted) return;
+    if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Unable to open WhatsApp'),
+          content: Text('Please login to send inquiry'),
           behavior: SnackBarBehavior.floating,
         ),
       );
+      return;
+    }
+
+    setState(() => _loading = true);
+
+    try {
+      await FirebaseFirestore.instance.collection('orders').add({
+        'orderNumber': 'GF-${DateTime.now().millisecondsSinceEpoch}',
+        'status': 'request_received',
+        'createdAt': Timestamp.now(),
+
+        // ---------- USER ----------
+        'user': {
+          'userId': user.uid,
+          'name': _nameController.text.trim(),
+          'phone': _phoneController.text.trim(),
+          'email': user.email,
+        },
+
+        // ---------- PRODUCT (CRITICAL FIX) ----------
+        'product': {
+          'id': widget.productId, // ✅ REQUIRED FOR ADMIN NAVIGATION
+          'name': _productController.text.trim().isEmpty
+              ? 'Not specified'
+              : _productController.text.trim(),
+        },
+
+        // ---------- REQUEST ----------
+        'request': {
+          'message': _messageController.text.trim(),
+          'source': 'app_inquiry',
+        },
+
+        // ---------- TIMELINE ----------
+        'timeline': [
+          {'status': 'request_received', 'by': 'user', 'time': Timestamp.now()},
+        ],
+      });
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Inquiry sent successfully'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+
+      Navigator.pop(context);
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to send inquiry. Please try again.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _loading = false);
     }
   }
 
@@ -104,33 +139,26 @@ ${_messageController.text.trim()}
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                /// HEADER
                 const Text(
                   'Send Inquiry',
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Fill in your details and our team will contact you on WhatsApp.',
+                  'Fill in your details and our team will contact you shortly.',
                   style: TextStyle(
                     fontSize: 14,
                     color: AppColors.textSecondary,
                   ),
                 ),
-
                 const SizedBox(height: 28),
-
-                /// FORM
                 _buildForm(),
-
                 const SizedBox(height: 28),
-
-                /// CTA
                 SizedBox(
                   width: double.infinity,
                   height: 54,
                   child: ElevatedButton(
-                    onPressed: _sendWhatsApp,
+                    onPressed: _loading ? null : _submitInquiry,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF6ED36F),
                       foregroundColor: Colors.white,
@@ -139,13 +167,15 @@ ${_messageController.text.trim()}
                         borderRadius: BorderRadius.circular(16),
                       ),
                     ),
-                    child: const Text(
-                      'Send Inquiry on WhatsApp',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                    child: _loading
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : const Text(
+                            'Send Inquiry',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                   ),
                 ),
               ],

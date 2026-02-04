@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:app_links/app_links.dart';
+import 'features/home/main_home_shell.dart';
 
 import 'features/splash/splash_screen.dart';
 import 'features/home/furniture_details_screen.dart';
@@ -11,6 +12,7 @@ import 'features/home/demo_products.dart';
 import 'common/notification_manager.dart';
 import 'common/local_notification_service.dart';
 import 'common/fcm_listener.dart';
+import 'common/main_scaffold.dart';
 
 import 'core/router/app_router.dart';
 import 'core/services/admin_session.dart';
@@ -143,6 +145,8 @@ class _MyAppState extends State<MyApp> {
 
       // ✅ Splash first
       home: const SplashScreen(),
+      // home: const MainScaffold(),
+      // home: const MainHomeShell(),
     );
   }
 }

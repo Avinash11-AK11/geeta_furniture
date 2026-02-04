@@ -123,13 +123,22 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
                     final doc = docs[index];
                     final data = doc.data() as Map<String, dynamic>;
 
-                    final images =
-                        (data['images'] is List && data['images'].isNotEmpty)
-                        ? data['images']
-                        : null;
+                    // final images =
+                    //     (data['images'] is List && data['images'].isNotEmpty)
+                    //     ? data['images']
+                    //     : null;
+                    //
+                    // final imageUrl = images != null
+                    //     ? images.first['url']
+                    //     : null;
 
-                    final imageUrl = images != null
-                        ? images.first['url']
+                    final List images = (data['images'] as List?) ?? [];
+
+                    final String? imageUrl =
+                        images.isNotEmpty &&
+                            images.first is Map &&
+                            images.first['url'] != null
+                        ? images.first['url'] as String
                         : null;
 
                     return GestureDetector(
@@ -137,10 +146,8 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => ProductDetailScreen(
-                              productId: doc.id,
-                              data: data,
-                            ),
+                            builder: (_) =>
+                                ProductDetailScreen(productId: doc.id),
                           ),
                         );
                       },

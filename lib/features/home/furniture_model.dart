@@ -23,7 +23,7 @@ class FurnitureModel {
     this.gallery = const [],
   });
 
-  /// 🔄 Convert object → JSON (for local storage / sharing if needed)
+  /// 🔄 Convert object → JSON (unchanged)
   Map<String, dynamic> toJson() => {
     'id': id,
     'name': name,
@@ -35,7 +35,7 @@ class FurnitureModel {
     'gallery': gallery,
   };
 
-  /// 🔄 Convert JSON → object (restore / deep link)
+  /// 🔄 Convert JSON → object (unchanged)
   factory FurnitureModel.fromJson(Map<String, dynamic> json) {
     return FurnitureModel(
       id: json['id'] as String,
@@ -51,7 +51,29 @@ class FurnitureModel {
     );
   }
 
-  /// 🆔 Equality based on ID (wishlist & comparisons)
+  /// ✅ Firestore → Model (FIXED IMAGE MAPPING)
+  factory FurnitureModel.fromFirestore(String id, Map<String, dynamic> data) {
+    final List images = (data['images'] as List?) ?? [];
+
+    final String primaryImage = images.isNotEmpty && images.first['url'] != null
+        ? images.first['url']
+        : '';
+
+    final List<String> gallery = images.map((e) => e['url'] as String).toList();
+
+    return FurnitureModel(
+      id: id,
+      name: data['name'] ?? '',
+      image: primaryImage,
+      price: '₹${data['price'] ?? 0}',
+      priceValue: (data['price'] as num?)?.toInt() ?? 0,
+      category: data['category'] ?? '',
+      description: data['description'],
+      gallery: gallery,
+    );
+  }
+
+  /// 🆔 Equality based on ID (unchanged)
   @override
   bool operator ==(Object other) =>
       identical(this, other) || other is FurnitureModel && other.id == id;

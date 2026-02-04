@@ -14,6 +14,7 @@ import 'account_info_screen.dart';
 import 'profile_skeleton.dart';
 import '../support/help_support_screen.dart';
 import '../support/about_app_screen.dart';
+import '../order/user_orders_screen.dart'; // ✅ ADDED
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -92,10 +93,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _toggleNotifications(bool value) {
     setState(() => _notificationsEnabled = value);
 
-    // Save locally
     NotificationManager.instance.setEnabled(value);
 
-    // Push notifications
     if (value) {
       FCMService.instance.enable();
     } else {
@@ -253,6 +252,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const AccountInformationScreen()),
+          );
+        }),
+        _profileTile(Icons.receipt_long, 'My Orders', () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const UserOrdersScreen()),
           );
         }),
         const SizedBox(height: 24),
