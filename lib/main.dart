@@ -136,11 +136,7 @@ class _MyAppState extends State<MyApp> {
           onSurface: Color(0xFF2E2E2E),
           onBackground: Color(0xFF2E2E2E),
         ),
-
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFFFDF8F4),
-          elevation: 0,
-        ),
+        appBarTheme: AppBarTheme(surfaceTintColor: Colors.transparent),
       ),
 
       // ✅ Splash first

@@ -51,20 +51,8 @@ class AdminOrdersScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: AppColors.background,
-        title: const Text(
-          'Orders',
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ),
-      body: StreamBuilder<QuerySnapshot>(
+    return SafeArea(
+      child: StreamBuilder<QuerySnapshot>(
         stream: _ordersStream(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
