@@ -21,7 +21,12 @@ class CategorySectionCard extends StatelessWidget {
         margin: const EdgeInsets.only(right: 14),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(18),
-          image: DecorationImage(image: AssetImage(image), fit: BoxFit.cover),
+          image: DecorationImage(
+            image: image.startsWith('http')
+                ? NetworkImage(image)
+                : AssetImage(image) as ImageProvider,
+            fit: BoxFit.cover,
+          ),
         ),
         child: Container(
           padding: const EdgeInsets.all(14),

@@ -37,19 +37,27 @@ class _HomeScreenState extends State<HomeScreen> {
         );
   }
 
-  /// 🔹 BUILD CATEGORIES FROM ADMIN DATA
-  List<String> _buildCategories(List<FurnitureModel> products) {
-    final set = <String>{};
-
-    for (final p in products) {
-      if (p.category.isNotEmpty) {
-        set.add(p.category);
-      }
-    }
-
-    final list = set.toList()..sort();
-    return ['All', ...list];
+  // 🔥 ADMIN CONTROLLED CATEGORY STREAM
+  Stream<QuerySnapshot> _categoriesStream() {
+    return FirebaseFirestore.instance
+        .collection('categories')
+        .orderBy('createdAt', descending: false)
+        .snapshots();
   }
+
+  /// 🔹 BUILD CATEGORIES FROM ADMIN DATA
+  // List<String> _buildCategories(List<FurnitureModel> products) {
+  //   final set = <String>{};
+  //
+  //   for (final p in products) {
+  //     if (p.category.isNotEmpty) {
+  //       set.add(p.category);
+  //     }
+  //   }
+  //
+  //   final list = set.toList()..sort();
+  //   return ['All', ...list];
+  // }
 
   String searchQuery = '';
   String selectedCategory = 'All';
@@ -66,20 +74,20 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() => _isLoading = false);
   }
 
-  String _categoryImage(String category) {
-    switch (category) {
-      case 'Sofas':
-        return 'assets/images/sofa.jpg';
-      case 'Chairs':
-        return 'assets/images/chair.jpg';
-      case 'Tables':
-        return 'assets/images/table.jpg';
-      case 'Beds':
-        return 'assets/images/wardrobe.jpg';
-      default:
-        return 'assets/images/chair.jpg';
-    }
-  }
+  // String _categoryImage(String category) {
+  //   switch (category) {
+  //     case 'Sofas':
+  //       return 'assets/images/sofa.jpg';
+  //     case 'Chairs':
+  //       return 'assets/images/chair.jpg';
+  //     case 'Tables':
+  //       return 'assets/images/table.jpg';
+  //     case 'Beds':
+  //       return 'assets/images/wardrobe.jpg';
+  //     default:
+  //       return 'assets/images/chair.jpg';
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -100,20 +108,23 @@ class _HomeScreenState extends State<HomeScreen> {
         final products = snapshot.data!;
 
         // 🔑 BUILD CATEGORIES FROM ADMIN DATA
-        final categories = _buildCategories(products);
+        // final categories = _buildCategories(products);
 
         // 🔥 RESET INVALID SELECTION
-        if (!categories.contains(selectedCategory)) {
-          selectedCategory = 'All';
-        }
+        // if (!categories.contains(selectedCategory)) {
+        //   selectedCategory = 'All';
+        // }
 
         // 🔍 SEARCH + CATEGORY FILTER
         final filtered = products.where((item) {
-          final query = searchQuery.toLowerCase();
-          return (selectedCategory == 'All' ||
-                  item.category == selectedCategory) &&
+          final query = searchQuery.toLowerCase().trim();
+
+          final itemCategory = item.category.trim().toLowerCase();
+          final selectedCat = selectedCategory.trim().toLowerCase();
+
+          return (selectedCategory == 'All' || itemCategory == selectedCat) &&
               (item.name.toLowerCase().contains(query) ||
-                  item.category.toLowerCase().contains(query) ||
+                  itemCategory.contains(query) ||
                   item.priceValue.toString().contains(query));
         }).toList();
 
@@ -193,23 +204,49 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 16),
 
               /// CATEGORY CHIPS (ADMIN DRIVEN)
-              SizedBox(
-                height: 40,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: categories.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 10),
-                  itemBuilder: (_, i) {
-                    final c = categories[i];
-                    return GestureDetector(
-                      onTap: () => setState(() => selectedCategory = c),
-                      child: CategoryChip(
-                        title: c,
-                        isSelected: selectedCategory == c,
-                      ),
-                    );
-                  },
-                ),
+              StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('categories')
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return const SizedBox();
+                  }
+
+                  final categoryDocs = snapshot.data!.docs;
+
+                  final categories = [
+                    'All',
+                    ...categoryDocs
+                        .map((doc) => (doc['name'] as String).trim())
+                        .toList(),
+                  ];
+
+                  // 🔥 Reset invalid selection
+                  if (!categories.contains(selectedCategory)) {
+                    selectedCategory = 'All';
+                  }
+
+                  return SizedBox(
+                    height: 40,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: categories.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 10),
+                      itemBuilder: (_, i) {
+                        final c = categories[i];
+
+                        return GestureDetector(
+                          onTap: () => setState(() => selectedCategory = c),
+                          child: CategoryChip(
+                            title: c,
+                            isSelected: selectedCategory == c,
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                },
               ),
 
               const SizedBox(height: 24),
@@ -224,30 +261,65 @@ class _HomeScreenState extends State<HomeScreen> {
 
               SizedBox(
                 height: 180,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  children: categories
-                      .where((c) => c != 'All')
-                      .map(
-                        (c) => CategorySectionCard(
-                          title: c,
-                          image: _categoryImage(c),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => CategoryProductsScreen(
-                                  category: c,
-                                  products: products
-                                      .where((item) => item.category == c)
-                                      .toList(),
-                                ),
-                              ),
+                child: StreamBuilder<QuerySnapshot>(
+                  stream: _categoriesStream(),
+                  builder: (context, categorySnapshot) {
+                    if (!categorySnapshot.hasData) {
+                      return const SizedBox();
+                    }
+
+                    final categoryDocs = categorySnapshot.data!.docs;
+
+                    if (categoryDocs.isEmpty) {
+                      return const SizedBox();
+                    }
+
+                    return ListView(
+                      scrollDirection: Axis.horizontal,
+                      children: categoryDocs
+                          .where((doc) {
+                            final data = doc.data() as Map<String, dynamic>;
+                            final name = (data['name'] ?? '').toString().trim();
+
+                            if (selectedCategory == 'All') return true;
+
+                            return name.toLowerCase() ==
+                                selectedCategory.trim().toLowerCase();
+                          })
+                          .map((doc) {
+                            final data = doc.data() as Map<String, dynamic>;
+                            final categoryName = data['name'] ?? '';
+                            final imageUrl = data['imageUrl'] ?? '';
+
+                            return CategorySectionCard(
+                              title: categoryName,
+                              image: imageUrl,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => CategoryProductsScreen(
+                                      category: categoryName,
+                                      products: products
+                                          .where(
+                                            (item) =>
+                                                item.category
+                                                    .trim()
+                                                    .toLowerCase() ==
+                                                categoryName
+                                                    .trim()
+                                                    .toLowerCase(),
+                                          )
+                                          .toList(),
+                                    ),
+                                  ),
+                                );
+                              },
                             );
-                          },
-                        ),
-                      )
-                      .toList(),
+                          })
+                          .toList(),
+                    );
+                  },
                 ),
               ),
 

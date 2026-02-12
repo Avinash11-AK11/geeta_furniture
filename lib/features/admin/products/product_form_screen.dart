@@ -6,7 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../../core/storage/cloudinary_service.dart';
-import 'product_categories.dart';
+// import 'product_categories.dart';
 
 class ProductFormScreen extends StatefulWidget {
   final String? productId;
@@ -87,6 +87,17 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
         );
       }
     }
+  }
+
+  Stream<List<String>> _categoriesStream() {
+    return FirebaseFirestore.instance
+        .collection('categories')
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => (doc.data()['name'] as String).trim())
+              .toList(),
+        );
   }
 
   Future<void> _pickImages() async {
@@ -392,27 +403,32 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                 const SizedBox(height: 24),
 
                 // CATEGORY
-                _fieldCard(
-                  DropdownButtonFormField<String>(
-                    value: _category,
-                    items: productCategories
-                        .where((c) => c != 'All')
-                        .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-                        .toList(),
-                    onChanged: (v) {
-                      setState(() => _category = v);
-                      _formKey.currentState?.validate();
-                    },
-                    validator: (v) => v == null ? 'Select category' : null,
-                    // decoration: const InputDecoration(
-                    //   labelText: 'Category',
-                    //   contentPadding: EdgeInsets.symmetric(
-                    //     horizontal: 0,
-                    //     vertical: 12,
-                    //   ),
-                    // ),
-                    decoration: _inputDecoration('Category'),
-                  ),
+                StreamBuilder<List<String>>(
+                  stream: _categoriesStream(),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) {
+                      return const SizedBox();
+                    }
+
+                    final categories = snapshot.data!;
+
+                    return _fieldCard(
+                      DropdownButtonFormField<String>(
+                        value: _category,
+                        items: categories
+                            .map(
+                              (c) => DropdownMenuItem(value: c, child: Text(c)),
+                            )
+                            .toList(),
+                        onChanged: (v) {
+                          setState(() => _category = v);
+                          _formKey.currentState?.validate();
+                        },
+                        validator: (v) => v == null ? 'Select category' : null,
+                        decoration: _inputDecoration('Category'),
+                      ),
+                    );
+                  },
                 ),
 
                 const SizedBox(height: 16),

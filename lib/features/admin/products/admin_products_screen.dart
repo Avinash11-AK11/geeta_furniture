@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
+import '../categories/category_list_screen.dart';
+
 import 'product_categories.dart';
 import 'product_detail_screen.dart';
 import 'product_form_screen.dart';
@@ -33,16 +35,36 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
                   'Products',
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.add),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const ProductFormScreen(),
-                      ),
-                    );
-                  },
+                Row(
+                  children: [
+                    // 🔹 Manage Categories Button
+                    IconButton(
+                      icon: const Icon(Icons.category_outlined),
+                      tooltip: 'Manage Categories',
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const CategoryListScreen(),
+                          ),
+                        );
+                      },
+                    ),
+
+                    // 🔹 Add Product Button (existing)
+                    IconButton(
+                      icon: const Icon(Icons.add),
+                      tooltip: 'Add Product',
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const ProductFormScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
                 ),
               ],
             ),
